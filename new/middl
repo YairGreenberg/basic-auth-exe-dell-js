@@ -1,0 +1,22 @@
+import jwt from 'jsonwebtoken';
+import 'dotenv/config';
+
+export const requireAuth = (req, res, next) => {
+    // קריאת הטוקן מה-Header לפי פורמט Bearer
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: "Unauthorized: No token provided" });
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    try {
+        // אימות הטוקן מול הסוד שב-env
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        // הצמדת ה-payload (שמכיל את ה-username) לתוך האובייקט req
+        req.user = decoded; 
+        next(); // מעבר לפונקציה הבאה (ה-Route)
+    } catch (err) {
+        res.status(401).json({ error: "Unauthorized: Invalid token" });
+    }
+};
